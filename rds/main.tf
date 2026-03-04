@@ -61,10 +61,6 @@ resource "aws_db_instance" "free_tier" {
   backup_retention_period      = 0    # disables automated backups
 }
 
-output "rds_endpoint" {
-  value = aws_db_instance.free_tier.endpoint
-}
-
 resource "aws_ssm_parameter" "rds_endpoint" {
   name  = "/myapp/rds/endpoint"
   type  = "String"
