@@ -1,0 +1,97 @@
+name: Terraform RDS
+
+on:
+  push:
+    branches: [main]
+    paths: ['rds/**']
+  pull_request:
+    branches: [main]
+    paths: ['rds/**']
+
+env:
+  TF_WORKING_DIR: ./rds
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      id-token: write       # Required for OIDC
+      contents: read
+      pull-requests: write  # Required to post PR comments
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  # arn:aws:iam::YOUR_ACCOUNT_ID:role/YOUR_ROLE_NAME
+          aws-region: us-east-1
+
+      - name: Verify Identity
+        run: aws sts get-caller-identity
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -out=tfplan 2>&1 | tee tfplan.txt
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+      # Post plan output to PR as a comment
+      - name: Comment Plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const plan = require('fs').readFileSync('${{ env.TF_WORKING_DIR }}/tfplan.txt', 'utf8')
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `\`\`\`hcl\n${plan}\n\`\`\``
+            })
+
+      # Only apply on push to main (not PRs)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+      - name: Verify RDS Instance
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          aws rds describe-db-instances \
+            --query 'DBInstances[*].[DBInstanceIdentifier,DBInstanceStatus]' \
+            --output table
+
+      - name: Verify SSM Parameters
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          aws ssm get-parameters-by-path \
+            --path /myapp/ \
+            --recursive \
+            --query 'Parameters[*].[Name,LastModifiedDate]' \
+            --output table
