@@ -61,10 +61,6 @@ resource "aws_db_instance" "free_tier" {
   backup_retention_period      = 0    # disables automated backups
 }
 
-variable "db_password" {
-  sensitive = true
-}
-
 output "rds_endpoint" {
   value = aws_db_instance.free_tier.endpoint
 }
