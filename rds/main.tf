@@ -23,7 +23,7 @@ resource "aws_security_group" "rds_sg" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # lock this down in production
+    cidr_blocks = ["0.0.0.0/0"] # lock this down in production
   }
 
   egress {
@@ -38,8 +38,8 @@ resource "aws_db_instance" "free_tier" {
   identifier        = "free-tier-db"
   engine            = "postgres"
   engine_version    = "15.3"
-  instance_class    = "db.t3.micro"   # free tier eligible
-  allocated_storage = 20              # free tier: up to 20GB
+  instance_class    = "db.t3.micro" # free tier eligible
+  allocated_storage = 20            # free tier: up to 20GB
 
   db_name  = "appdb"
   username = "dbadmin"
@@ -49,8 +49,8 @@ resource "aws_db_instance" "free_tier" {
   db_subnet_group_name   = aws_db_subnet_group.default.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
-  publicly_accessible = true          # set false if using bastion/VPN
-  skip_final_snapshot = true          # fine for dev/free-tier
+  publicly_accessible = true # set false if using bastion/VPN
+  skip_final_snapshot = true # fine for dev/free-tier
   deletion_protection = false
 
   # Free tier — disable paid features
@@ -58,7 +58,7 @@ resource "aws_db_instance" "free_tier" {
   storage_encrypted            = false
   performance_insights_enabled = false
   monitoring_interval          = 0
-  backup_retention_period      = 0    # disables automated backups
+  backup_retention_period      = 0 # disables automated backups
 }
 
 resource "aws_ssm_parameter" "rds_endpoint" {
