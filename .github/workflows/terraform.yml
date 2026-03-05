@@ -55,6 +55,8 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -out=tfplan 2>&1 | tee tfplan.txt
+        env:
+          TF_VAR_DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
 
       # Post plan output to PR as a comment
       - name: Comment Plan on PR
@@ -75,6 +77,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
 
       - name: Verify RDS Instance
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
