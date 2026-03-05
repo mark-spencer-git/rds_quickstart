@@ -1,6 +1,7 @@
 name: Terraform RDS
 
 on:
+  workflow_dispatch:  # adds manual trigger button
   push:
     branches: [main]
     paths: ['rds/**']
