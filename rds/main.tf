@@ -43,8 +43,8 @@ resource "aws_db_instance" "free_tier" {
 
   db_name  = "appdb"
   username = "dbadmin"
-  # assign TF_VAR_db_password in environment variables to pull from environment variables
-  password = var.db_password
+  # assign TF_VAR_DB_PASSWORD in environment variables to pull from environment variables
+  password = var.DB_PASSWORD
 
   db_subnet_group_name   = aws_db_subnet_group.default.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
@@ -83,5 +83,5 @@ resource "aws_ssm_parameter" "rds_db_name" {
 resource "aws_ssm_parameter" "rds_password" {
   name  = "/myapp/rds/password"
   type  = "SecureString"
-  value = var.db_password
+  value = var.DB_PASSWORD
 }
