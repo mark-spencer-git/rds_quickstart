@@ -78,6 +78,12 @@ jobs:
               echo "SSM parameter $PARAM exists, importing..."
               terraform import aws_ssm_parameter.rds_$RESOURCE $PARAM || true
             fi
+          for PARAM in endpoint port db_name password; do
+            FULL_PARAM="/myapp/rds/$PARAM"
+            if aws ssm get-parameter --name "$FULL_PARAM" 2>/dev/null; then
+              echo "SSM parameter $FULL_PARAM exists, importing..."
+              terraform import aws_ssm_parameter.rds_$PARAM $FULL_PARAM || true
+            fi
           done
         env:
           TF_VAR_DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
