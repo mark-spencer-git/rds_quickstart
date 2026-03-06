@@ -2,6 +2,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
+terraform {
+  backend "s3" {
+    bucket = "rds-quickstart-tfstate"
+    key    = "rds/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
 # Use existing default VPC subnets automatically
 data "aws_subnets" "default" {
   filter {
