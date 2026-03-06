@@ -37,7 +37,7 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_db_instance" "free_tier" {
   identifier        = "free-tier-db"
   engine            = "postgres"
-  engine_version    = "15.3"
+  engine_version    = "16.13"
   instance_class    = "db.t3.micro" # free tier eligible
   allocated_storage = 20            # free tier: up to 20GB
 
