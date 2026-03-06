@@ -62,30 +62,30 @@ resource "aws_db_instance" "free_tier" {
 }
 
 resource "aws_ssm_parameter" "rds_endpoint" {
-  name  = "/myapp/rds/endpoint"
-  type  = "String"
-  value = aws_db_instance.free_tier.endpoint
+  name      = "/myapp/rds/endpoint"
+  type      = "String"
+  value     = aws_db_instance.free_tier.endpoint
   overwrite = true
 }
 
 resource "aws_ssm_parameter" "rds_port" {
-  name  = "/myapp/rds/port"
-  type  = "String"
-  value = aws_db_instance.free_tier.port
+  name      = "/myapp/rds/port"
+  type      = "String"
+  value     = aws_db_instance.free_tier.port
   overwrite = true
 }
 
 resource "aws_ssm_parameter" "rds_db_name" {
-  name  = "/myapp/rds/db_name"
-  type  = "String"
-  value = aws_db_instance.free_tier.db_name
+  name      = "/myapp/rds/db_name"
+  type      = "String"
+  value     = aws_db_instance.free_tier.db_name
   overwrite = true
 }
 
 # Store password as SecureString
 resource "aws_ssm_parameter" "rds_password" {
-  name  = "/myapp/rds/password"
-  type  = "SecureString"
-  value = var.DB_PASSWORD
+  name      = "/myapp/rds/password"
+  type      = "SecureString"
+  value     = var.DB_PASSWORD
   overwrite = true
 }
