@@ -45,6 +45,43 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
+      - name: Import Existing Resources
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          # Check and import subnet group if it exists
+          if aws rds describe-db-subnet-groups \
+            --db-subnet-group-name free-tier-subnet-group \
+            --query 'DBSubnetGroups[0].DBSubnetGroupName' \
+            --output text 2>/dev/null | grep -q "free-tier-subnet-group"; then
+            echo "Subnet group exists, importing..."
+            terraform import aws_db_subnet_group.default free-tier-subnet-group || true
+          else
+            echo "Subnet group does not exist, will be created"
+          fi
+
+          # Check and import security group if it exists
+          SG_ID=$(aws ec2 describe-security-groups \
+            --filters Name=group-name,Values=free-tier-rds-sg \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text 2>/dev/null)
+          if [ "$SG_ID" != "None" ] && [ -n "$SG_ID" ]; then
+            echo "Security group exists ($SG_ID), importing..."
+            terraform import aws_security_group.rds_sg $SG_ID || true
+          else
+            echo "Security group does not exist, will be created"
+          fi
+
+          # Check and import SSM parameters if they exist
+          for PARAM in /myapp/rds/endpoint /myapp/rds/port /myapp/rds/db_name /myapp/rds/password; do
+            if aws ssm get-parameter --name "$PARAM" 2>/dev/null; then
+              RESOURCE=$(echo $PARAM | sed 's|/myapp/rds/||')
+              echo "SSM parameter $PARAM exists, importing..."
+              terraform import aws_ssm_parameter.rds_$RESOURCE $PARAM || true
+            fi
+          done
+        env:
+          TF_VAR_DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
+
       - name: Terraform Format Check
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform fmt -check
