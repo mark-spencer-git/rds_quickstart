@@ -72,12 +72,6 @@ jobs:
           fi
 
           # Check and import SSM parameters if they exist
-          for PARAM in /myapp/rds/endpoint /myapp/rds/port /myapp/rds/db_name /myapp/rds/password; do
-            if aws ssm get-parameter --name "$PARAM" 2>/dev/null; then
-              RESOURCE=$(echo $PARAM | sed 's|/myapp/rds/||')
-              echo "SSM parameter $PARAM exists, importing..."
-              terraform import aws_ssm_parameter.rds_$RESOURCE $PARAM || true
-            fi
           for PARAM in endpoint port db_name password; do
             FULL_PARAM="/myapp/rds/$PARAM"
             if aws ssm get-parameter --name "$FULL_PARAM" 2>/dev/null; then
